@@ -7,11 +7,14 @@ import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.variancetechnologies.roomy.databinding.ActivityMainBinding
 import db.SubscribeDatabase
+import db.Subscriber
 import db.SubscriberDAO
 import db.SubscriberRepository
 
@@ -29,18 +32,30 @@ class MainActivity : AppCompatActivity() {
         subscriberViewModel = ViewModelProvider(this, factory).get(SubscriberViewModel::class.java)
         binding.mViewModel = subscriberViewModel
         binding.lifecycleOwner = this
-       displaySubscriberList()
+        initRecyclerView()
+        subscriberViewModel.message.observe(this, Observer {
+            it.getContentIfNotHandled()?.let {
+                Toast.makeText(this,it,Toast.LENGTH_LONG).show()
+            }
+        })
     }
 
-    fun initRecyclerView(){
-
+    fun initRecyclerView() {
+        binding.subscriberRecyclerView.layoutManager = LinearLayoutManager(this)
+        displaySubscriberList()
     }
 
 
     private fun displaySubscriberList() {
         subscriberViewModel.subscribers.observe(this, Observer {
-            Log.i("MYTAG", it.toString())
+            binding.subscriberRecyclerView.adapter =
+                RecyclerViewAdapter(it, { selectedIem: Subscriber -> listItemClicked(selectedIem) })
         })
+    }
+
+    private fun listItemClicked(subscriber: Subscriber) {
+        //Toast.makeText(this, "selected is ${subscriber.name} ", Toast.LENGTH_LONG).show()
+        subscriberViewModel.initUpdateAndDelete(subscriber)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
